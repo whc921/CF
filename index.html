@@ -1,0 +1,2629 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="流水表" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>流水表</title>
+  <style>
+    :root {
+      --bg-app: #090d16;
+      --bg-card: #111827;
+      --bg-card-elevated: #1e293b;
+      --bg-input: #0f172a;
+      --border-subtle: rgba(148, 163, 184, 0.16);
+      --border-strong: rgba(148, 163, 184, 0.34);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --text-muted: #64748b;
+      --accent-emerald: #10b981;
+      --accent-emerald-soft: rgba(16, 185, 129, 0.15);
+      --accent-sky: #38bdf8;
+      --accent-sky-soft: rgba(56, 189, 248, 0.16);
+      --accent-amber: #f59e0b;
+      --accent-amber-soft: rgba(245, 158, 11, 0.16);
+      --accent-rose: #f43f5e;
+      --accent-rose-soft: rgba(244, 63, 94, 0.16);
+      --safe-top: env(safe-area-inset-top, 12px);
+      --safe-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang HK", "Microsoft JhengHei", sans-serif;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 頂部標題欄 */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(9, 13, 22, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: calc(var(--safe-top) + 8px) 16px 10px;
+    }
+
+    .header-row {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+
+    .btn-icon {
+      min-width: 40px;
+      min-height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-card-elevated);
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.15s ease;
+    }
+
+    .btn-icon:active {
+      transform: scale(0.95);
+    }
+
+    .btn-icon-amber {
+      background: linear-gradient(135deg, #d97706, #b45309);
+      border-color: rgba(251, 191, 36, 0.5);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 0 11px;
+      gap: 4px;
+    }
+
+    /* 主容器 */
+    .main-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 14px 14px calc(var(--safe-bottom) + 92px);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* 卡片與通用組件 */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 15px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    }
+
+    .card-calibrator {
+      background: linear-gradient(155deg, #101f38 0%, #111827 65%, #0d2122 100%);
+      border: 1px solid rgba(56, 189, 248, 0.38);
+    }
+
+    .card-adhoc {
+      background: linear-gradient(155deg, rgba(245, 158, 11, 0.13), rgba(30, 41, 59, 0.72));
+      border: 1px solid rgba(245, 158, 11, 0.42);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .badge-sky { background: var(--accent-sky-soft); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.32); }
+    .badge-emerald { background: var(--accent-emerald-soft); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.32); }
+    .badge-amber { background: var(--accent-amber-soft); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.36); }
+    .badge-rose { background: var(--accent-rose-soft); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.36); }
+    .badge-slate { background: rgba(148, 163, 184, 0.14); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.24); }
+
+    .target-banner {
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      border-radius: 12px;
+      padding: 9px 12px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .target-banner-label {
+      font-size: 11px;
+      color: #bae6fd;
+      font-weight: 600;
+    }
+
+    .target-banner-value {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sub);
+      margin-bottom: 5px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 11px 12px;
+      color: var(--text-main);
+      font-size: 15px;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-sky);
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      width: 100%;
+      min-height: 46px;
+      border-radius: 13px;
+      border: 1px solid transparent;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 14px;
+      transition: transform 0.12s ease, opacity 0.15s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #059669, #0d9488);
+      color: #ffffff;
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.28);
+    }
+
+    .btn-sky {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      box-shadow: 0 6px 18px rgba(56, 189, 248, 0.25);
+    }
+
+    .btn-amber {
+      background: linear-gradient(135deg, #d97706, #b45309);
+      color: #ffffff;
+      box-shadow: 0 6px 18px rgba(245, 158, 11, 0.25);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card-elevated);
+      color: var(--text-main);
+      border-color: var(--border-strong);
+    }
+
+    .btn-danger {
+      background: var(--accent-rose-soft);
+      color: #fda4af;
+      border-color: rgba(244, 63, 94, 0.35);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    /* KPI 網格 */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .kpi-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 13px;
+    }
+
+    .kpi-title {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-bottom: 4px;
+    }
+
+    .kpi-num {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .text-emerald { color: #34d399; }
+    .text-sky { color: #38bdf8; }
+    .text-amber { color: #fbbf24; }
+    .text-rose { color: #fb7185; }
+
+    /* 警告與提示 */
+    .alert-box {
+      border-radius: 14px;
+      padding: 11px 13px;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+    }
+
+    .alert-amber {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fde68a;
+    }
+
+    .alert-rose {
+      background: rgba(244, 63, 94, 0.14);
+      border: 1px solid rgba(244, 63, 94, 0.42);
+      color: #fecdd3;
+    }
+
+    /* 薪金時段卡片 */
+    .period-card {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .period-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .period-tag {
+      font-size: 12px;
+      font-weight: 800;
+      color: #7dd3fc;
+    }
+
+    .btn-mini-del {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.32);
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .ym-picker-box {
+      background: rgba(30, 41, 59, 0.55);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 8px;
+    }
+
+    .ym-select-row {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 6px;
+    }
+
+    .ym-select {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 9px 8px;
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .ym-select:focus {
+      border-color: var(--accent-sky);
+    }
+
+    /* 開關列 */
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 12px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid var(--border-subtle);
+      border-radius: 13px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .switch-row input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      accent-color: #10b981;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    /* 年份篩選按鈕列 */
+    .chip-scroll {
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      scrollbar-width: none;
+    }
+
+    .chip-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      padding: 7px 13px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-card);
+      color: var(--text-sub);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .chip.active {
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #ffffff;
+    }
+
+    /* 突發支出快速標籤 */
+    .adhoc-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .adhoc-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245, 158, 11, 0.16);
+      border: 1px solid rgba(245, 158, 11, 0.42);
+      color: #fde68a;
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .adhoc-chip-del {
+      background: rgba(244, 63, 94, 0.24);
+      color: #fecdd3;
+      border: none;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* 流水列表項 */
+    .ledger-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 13px 14px;
+      margin-bottom: 9px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .ledger-item:active {
+      transform: scale(0.99);
+    }
+
+    .ledger-item.is-locked {
+      border-color: rgba(56, 189, 248, 0.55);
+      background: linear-gradient(160deg, rgba(56, 189, 248, 0.08), var(--bg-card));
+    }
+
+    .ledger-item.is-adhoc {
+      border-color: rgba(245, 158, 11, 0.55);
+      background: linear-gradient(160deg, rgba(245, 158, 11, 0.09), var(--bg-card));
+    }
+
+    .ledger-item.is-low {
+      border-color: rgba(245, 158, 11, 0.55);
+    }
+
+    .ledger-item.is-neg {
+      border-color: rgba(244, 63, 94, 0.65);
+    }
+
+    .ledger-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .ledger-date {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .ledger-bal {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .ledger-mid {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+
+    .ledger-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .mini-tag {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(30, 41, 59, 0.9);
+      color: #cbd5e1;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .mini-tag-adhoc {
+      background: rgba(245, 158, 11, 0.22);
+      color: #fde68a;
+      border-color: rgba(245, 158, 11, 0.45);
+      font-weight: 700;
+    }
+
+    /* 底部導覽列 */
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 45;
+      background: rgba(9, 13, 22, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-subtle);
+      padding: 6px 8px calc(var(--safe-bottom) + 4px);
+    }
+
+    .nav-grid {
+      max-width: 720px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      border-radius: 12px;
+      padding: 7px 4px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .nav-btn.active {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    /* 彈窗 Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: rgba(2, 6, 23, 0.84);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 720px;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: #111827;
+      border-top: 1px solid var(--border-strong);
+      border-radius: 22px 22px 0 0;
+      padding: 16px 16px calc(var(--safe-bottom) + 20px);
+      box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.55);
+    }
+
+    @media (min-width: 640px) {
+      .modal-backdrop {
+        align-items: center;
+        padding: 16px;
+      }
+      .modal-sheet {
+        border-radius: 22px;
+        border: 1px solid var(--border-strong);
+      }
+    }
+
+    /* Toast 提示 */
+    .toast {
+      position: fixed;
+      top: calc(var(--safe-top) + 62px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-16px);
+      z-index: 80;
+      background: #065f46;
+      border: 1px solid #34d399;
+      color: #ecfdf5;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      max-width: 92vw;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部狀態欄 -->
+  <header class="app-header">
+    <div class="header-row">
+      <div>
+        <div class="brand-title">
+          <span>流水表</span>
+          <span class="badge badge-emerald">2026–2032 共 75 期</span>
+        </div>
+        <div class="brand-sub" id="headerSubtitle">2026年12月 至 2032年12月 · 實數校準與突發管理</div>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button type="button" class="btn-icon btn-icon-amber" id="btnQuickAdhocHeader" onclick="openAdhocQuickModal()" title="新增特定期數突發支出">
+          <span>＋突發</span>
+        </button>
+        <button type="button" class="btn-icon" id="btnAddEntryHeader" onclick="openAddEntryModal()" title="新增自訂日期流水">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="toastBanner" class="toast">已更新</div>
+
+  <!-- 主內容區 -->
+  <main class="main-wrap">
+
+    <!-- ==================== TAB 1: 總覽與每月實數校準 ==================== -->
+    <section id="tab-overview" class="tab-panel active">
+
+      <!-- 每月實際結餘校準卡片 -->
+      <div class="card card-calibrator">
+        <div class="card-header">
+          <div class="card-title">
+            <span>每月實際結餘校準（錨點鎖定）</span>
+          </div>
+          <span class="badge badge-sky" id="anchorCountBadge">已鎖定 0 個月</span>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <label class="field-label" for="calMonthSelect">1. 選擇要更新銀行結餘的月份</label>
+          <select id="calMonthSelect" class="form-control" onchange="onCalMonthChange()"></select>
+        </div>
+
+        <!-- 明確高亮顯示目標月份，防止入錯月 -->
+        <div class="target-banner">
+          <div>
+            <div class="target-banner-label">正在核對及更新的目標月份</div>
+            <div class="target-banner-value" id="calTargetMonthDisplay">2026年12月 (2026-12-07)</div>
+          </div>
+          <span class="badge badge-amber" id="calTargetStatusBadge">系統推算中</span>
+        </div>
+
+        <div class="form-grid-2" style="margin-bottom:8px;">
+          <div>
+            <label class="field-label" id="calExpectedLabel">系統原推算結餘</label>
+            <div id="calExpectedVal" class="form-control tabular" style="background:rgba(15,23,42,0.5); color:#94a3b8;">HK$0</div>
+          </div>
+          <div>
+            <label class="field-label" for="calActualInput" id="calActualLabel">輸入實際結餘 (HKD)</label>
+            <input type="number" id="calActualInput" class="form-control tabular" step="1" placeholder="輸入實際結餘" oninput="onCalActualInput()" />
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:10px; padding:0 2px;">
+          <span style="color:var(--text-sub);">與原推算差額：</span>
+          <strong id="calDiffVal" class="tabular text-sky">HK$0 (無變動)</strong>
+        </div>
+
+        <button type="button" class="btn btn-primary" id="btnLockActual" onclick="lockSelectedMonthBalance()">
+          確認鎖定 2026年12月 實際結餘
+        </button>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-secondary" style="min-height:40px; font-size:12px;" onclick="stepCalMonth(1)">
+            跳至下一個月 ➔
+          </button>
+          <button type="button" class="btn btn-danger" id="btnUnlockCalMonth" style="min-height:40px; font-size:12px; display:none;" onclick="unlockSelectedMonthBalance()">
+            解除本月鎖定
+          </button>
+        </div>
+      </div>
+
+      <!-- HSBC生活費 Top-up 調度入帳選項卡片（可獨立開關兩次 Top-up） -->
+      <div class="card" style="background:linear-gradient(155deg, rgba(16, 185, 129, 0.12), rgba(56, 189, 248, 0.08)); border:1px solid rgba(16, 185, 129, 0.35);">
+        <div class="card-header" style="margin-bottom:6px;">
+          <div class="card-title">
+            HSBC生活費 Top-up 調度入帳選項
+            <span class="badge badge-emerald" id="hsbcTopupStatusBadge">已選 2 項</span>
+          </div>
+        </div>
+        <p style="font-size:12px; color:var(--text-sub); margin:0 0 10px; line-height:1.45;">
+          勾選後該期會增加 Top-up 入帳結餘並相應上調後續 HSBC生活費 月供；如不勾選則維持原月供（$7,500）且不增加該筆 Top-up 入帳。
+        </p>
+
+        <label class="switch-row" for="topup1Toggle" style="margin-bottom:8px; padding:10px 12px;">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:var(--text-main);">第 1 次：2028年10月 Top-up (48期)</div>
+            <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">
+              2028-10-07 入帳 <strong class="text-emerald">+$65,000</strong>，2028-11 至 2032-10 HSBC生活費 月供由 $7,500 增至 <strong class="text-rose">$9,212</strong>（+$1,712/月）
+            </div>
+          </div>
+          <input type="checkbox" id="topup1Toggle" checked onchange="onHsbcTopupToggleChange()" />
+        </label>
+
+        <label class="switch-row" for="topup2Toggle" style="margin-bottom:0; padding:10px 12px;">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:var(--text-main);">第 2 次：2030年05月 Top-up (24期)</div>
+            <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">
+              2030-05-07 入帳 <strong class="text-emerald">+$30,000</strong>，2030-06 至 2032-05 HSBC生活費 月供額外增加 <strong class="text-rose">+$1,404/月</strong>（配合第1次為 $10,616）
+            </div>
+          </div>
+          <input type="checkbox" id="topup2Toggle" checked onchange="onHsbcTopupToggleChange()" />
+        </label>
+      </div>
+
+      <!-- 特定期數突發支出快速新增與管理卡片 -->
+      <div class="card card-adhoc">
+        <div class="card-header">
+          <div class="card-title">
+            <span>特定期數突發支出設定</span>
+          </div>
+          <span class="badge badge-amber" id="adhocCountBadge">已設 0 項</span>
+        </div>
+        <p style="font-size:12px; color:var(--text-sub); margin:0 0 10px; line-height:1.45;">
+          可為指定月份定立專屬期數／突發名稱（如「2028旅行」、「醫療備用」）及支出金額，系統會自動扣減該期結餘並向後重算。
+        </p>
+
+        <div style="margin-bottom:8px;">
+          <label class="field-label" for="quickAdhocPeriodSelect">選擇特定期數月份</label>
+          <select id="quickAdhocPeriodSelect" class="form-control"></select>
+        </div>
+
+        <div class="form-grid-2">
+          <div>
+            <label class="field-label" for="quickAdhocName">定立期數／突發名稱</label>
+            <input type="text" id="quickAdhocName" class="form-control" placeholder="例：日本旅行 / 牙科" />
+          </div>
+          <div>
+            <label class="field-label" for="quickAdhocAmount">突發支出金額 (HKD)</label>
+            <input type="number" id="quickAdhocAmount" class="form-control tabular" step="1" placeholder="例：15000" />
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-amber" onclick="saveQuickAdhocExpense()">
+          儲存此期數突發支出
+        </button>
+
+        <div id="adhocActiveList" class="adhoc-chip-list"></div>
+      </div>
+
+      <!-- 低水位預警橫幅 -->
+      <div id="lowWaterAlert" class="alert-box alert-amber">
+        <div style="font-weight:800; font-size:14px;">!</div>
+        <div id="lowWaterAlertText">載入中...</div>
+      </div>
+
+      <!-- 核心指標 4 格 -->
+      <div class="kpi-grid">
+        <div class="kpi-box">
+          <div class="kpi-title">2032年12月 期末總結餘</div>
+          <div class="kpi-num text-emerald tabular" id="kpiEnd2032">HK$56,952</div>
+          <div class="kpi-note" id="kpiEnd2032Diff">對比原計劃基準</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-title">全期最低現金水位</div>
+          <div class="kpi-num text-amber tabular" id="kpiMinBal">HK$624</div>
+          <div class="kpi-note" id="kpiMinDate">2031-10-07 (40歲)</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-title">2031年12月 結餘</div>
+          <div class="kpi-num text-sky tabular" id="kpiEnd2031">HK$5,392</div>
+          <div class="kpi-note">媽與姨家用調整至各 $6,000</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-title">2032年11月起 每月淨儲蓄</div>
+          <div class="kpi-num text-main tabular" id="kpiMonthlySave">+HK$6,000</div>
+          <div class="kpi-note">全數貸款及 Top-up 供完</div>
+        </div>
+      </div>
+
+      <!-- 關鍵轉折里程碑摘要 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">2026–2032 關鍵轉折里程碑</div>
+          <span class="badge badge-slate">點擊查看該年流水</span>
+        </div>
+        <div id="milestoneList"></div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 2: 薪金時段設定 (Review & 1月雙糧) ==================== -->
+    <section id="tab-salary" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">薪金 Review 時段設定 (2027–2032)</div>
+          <span class="badge badge-sky" id="salaryPeriodCountBadge">1 個時段</span>
+        </div>
+        <p style="font-size:12px; color:var(--text-sub); margin:0 0 12px; line-height:1.55;">
+          請使用下拉選單選擇各時段的<strong>開始與結束年月</strong>及<strong>每月基本底薪</strong>。系統會自動執行以下規則：<br/>
+          1. <strong>每年 1 月自動雙糧</strong>：自動讀取<strong>上一年 12 月</strong>的適用底薪，並加進當年 1 月收入內（2027年1月維持原清數入帳）。<br/>
+          2. <strong>特別調度保留</strong>：2028年10月 Top-up (+$65,000) 與 2030年05月 Top-up (+$30,000) 會依總覽頁勾選狀態自動保留。
+        </p>
+
+        <div id="salaryPeriodsContainer"></div>
+
+        <button type="button" class="btn btn-secondary" style="margin-bottom:12px;" onclick="addSalaryPeriod()">
+          ＋ 新增下一個薪金時段
+        </button>
+
+        <!-- 加人工就分 3 份開關 -->
+        <label class="switch-row" for="splitThreeToggle">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:var(--text-main);">套用「加人工就分 3 份」自動分配規則</div>
+            <div style="font-size:11px; color:var(--text-sub); margin-top:3px;">
+              超出基準月薪 $36,500 的加薪淨額：<strong>1/3 撥入媽家用、1/3 撥入姨家用、1/3 留存帳戶結餘</strong>（供樓支出維持不變）
+            </div>
+          </div>
+          <input type="checkbox" id="splitThreeToggle" onchange="onSplitThreeToggleChange(this.checked)" />
+        </label>
+
+        <!-- 即時影響預覽 -->
+        <div class="kpi-grid" style="margin-top:10px; margin-bottom:10px;">
+          <div class="kpi-box" style="background:rgba(15,23,42,0.8);">
+            <div class="kpi-title">套用後 2031 最低水位</div>
+            <div class="kpi-num text-amber tabular" id="salPreviewMin">HK$624</div>
+            <div class="kpi-note" id="salPreviewMinDate">2031-10-07</div>
+          </div>
+          <div class="kpi-box" style="background:rgba(15,23,42,0.8);">
+            <div class="kpi-title">套用後 2032年底 結餘</div>
+            <div class="kpi-num text-emerald tabular" id="salPreview2032">HK$56,952</div>
+            <div class="kpi-note" id="salPreviewDiff">與原計劃相同</div>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-sky" onclick="applySalaryPeriodsToLedger()">
+          確認並套用至 75 期流水線
+        </button>
+      </div>
+
+      <!-- 每年 1 月雙糧自動計算明細 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">每年 1 月雙糧自動計算預覽</div>
+          <span class="badge badge-emerald">取上一年 12 月底薪</span>
+        </div>
+        <div id="janBonusPreviewList" style="font-size:12px; color:var(--text-sub);"></div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: 75期完整流水明細 ==================== -->
+    <section id="tab-ledger" class="tab-panel">
+      <div style="margin-bottom:8px;">
+        <input type="text" id="ledgerSearchInput" class="form-control" placeholder="搜尋日期、突發名稱、HSBC生活費、供樓、媽、姨、旅遊及保險費用..." oninput="renderLedgerList()" />
+      </div>
+
+      <div class="chip-scroll" id="yearChipRow">
+        <button type="button" class="chip active" data-year="ALL" onclick="setYearFilter('ALL', this)">全部 (75期)</button>
+        <button type="button" class="chip" data-year="ADHOC" onclick="setYearFilter('ADHOC', this)">突發支出</button>
+        <button type="button" class="chip" data-year="LOCKED" onclick="setYearFilter('LOCKED', this)">已實數鎖定</button>
+        <button type="button" class="chip" data-year="2026" onclick="setYearFilter('2026', this)">2026</button>
+        <button type="button" class="chip" data-year="2027" onclick="setYearFilter('2027', this)">2027</button>
+        <button type="button" class="chip" data-year="2028" onclick="setYearFilter('2028', this)">2028</button>
+        <button type="button" class="chip" data-year="2029" onclick="setYearFilter('2029', this)">2029</button>
+        <button type="button" class="chip" data-year="2030" onclick="setYearFilter('2030', this)">2030</button>
+        <button type="button" class="chip" data-year="2031" onclick="setYearFilter('2031', this)">2031</button>
+        <button type="button" class="chip" data-year="2032" onclick="setYearFilter('2032', this)">2032</button>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-sub); margin-bottom:8px; padding:0 4px;">
+        <span id="ledgerCountInfo">顯示 75 期紀錄</span>
+        <span>點擊任何一期可編輯／設定突發名稱</span>
+      </div>
+
+      <div id="ledgerListContainer"></div>
+    </section>
+
+    <!-- ==================== TAB 4: 備份與系統設定 ==================== -->
+    <section id="tab-settings" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">資料匯出與備份還原</div>
+        </div>
+        <p style="font-size:12px; color:var(--text-sub); margin:0 0 12px; line-height:1.5;">
+          所有實數鎖定、特定期數突發支出、HSBC生活費 Top-up 選項與薪金時段均自動儲存在本機瀏覽器。建議定期匯出 JSON 備份或 Excel 相容 CSV 報表。
+        </p>
+
+        <button type="button" class="btn btn-primary" style="margin-bottom:9px;" onclick="exportJsonBackup()">
+          匯出完整 JSON 備份檔案
+        </button>
+
+        <button type="button" class="btn btn-secondary" style="margin-bottom:9px;" onclick="exportCsvReport()">
+          匯出 Excel 相容 CSV 流水表 (75期)
+        </button>
+
+        <label class="btn btn-secondary" style="margin-bottom:9px; cursor:pointer;">
+          <span>從 JSON 備份檔案還原</span>
+          <input type="file" id="importJsonFile" accept=".json,application/json" style="display:none;" onchange="importJsonBackup(event)" />
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">重置與 iPhone 主畫面安裝說明</div>
+        </div>
+        <p style="font-size:12px; color:var(--text-sub); margin:0 0 12px; line-height:1.55;">
+          <strong>加入 iPhone 主畫面 (PWA)：</strong><br/>
+          使用 Safari 開啟此網頁後，點擊底部「分享」圖示，選擇「加入主畫面」，即可作為全螢幕獨立 App 離線使用。<br/><br/>
+          <strong>安全上限警示門檻 (HKD)：</strong>
+        </p>
+        <div style="margin-bottom:12px;">
+          <input type="number" id="warnThresholdInput" class="form-control tabular" value="3000" step="500" onchange="updateWarnThreshold(this.value)" />
+        </div>
+
+        <button type="button" class="btn btn-danger" onclick="openResetConfirmModal()">
+          重置回原始 Option 1 (2026–2032 共 75 期)
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 底部 4 分頁導覽列 -->
+  <nav class="bottom-nav" aria-label="主導覽列">
+    <div class="nav-grid">
+      <button type="button" class="nav-btn active" id="nav-overview" onclick="switchTab('overview')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>總覽校準</span>
+      </button>
+      <button type="button" class="nav-btn" id="nav-salary" onclick="switchTab('salary')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>薪金時段</span>
+      </button>
+      <button type="button" class="nav-btn" id="nav-ledger" onclick="switchTab('ledger')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <span>75期流水</span>
+      </button>
+      <button type="button" class="nav-btn" id="nav-settings" onclick="switchTab('settings')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>備份設定</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ==================== 單期編輯 / 新增彈窗 ==================== -->
+  <div id="entryModal" class="modal-backdrop" onclick="if(event.target===this) closeEntryModal()">
+    <div class="modal-sheet">
+      <div class="card-header" style="margin-bottom:12px;">
+        <div>
+          <div class="card-title" id="modalHeaderTitle" style="font-size:16px;">編輯 2026年12月 流水明細</div>
+          <div id="modalHeaderSub" style="font-size:11px; color:var(--text-sub); margin-top:2px;">修改項目後將自動向後滾動重算至 2032 年</div>
+        </div>
+        <button type="button" class="btn-icon" onclick="closeEntryModal()" aria-label="關閉">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- 特定期數名稱與突發支出專區 -->
+      <div style="background:rgba(245, 158, 11, 0.12); border:1px solid rgba(245, 158, 11, 0.42); border-radius:14px; padding:11px; margin-bottom:12px;">
+        <div style="font-size:12px; font-weight:800; color:#fcd34d; margin-bottom:8px;">
+          特定期數突發支出設定（可為本期定立專屬名稱）
+        </div>
+        <div class="form-grid-2" style="margin-bottom:0;">
+          <div>
+            <label class="field-label" style="color:#fde68a;">期數／突發項目名稱</label>
+            <input type="text" id="mAdhocName" class="form-control" placeholder="例：日本旅行 / 醫療檢查" oninput="recalcModalPreview()" />
+          </div>
+          <div>
+            <label class="field-label" style="color:#fde68a;">突發支出金額 (HKD)</label>
+            <input type="number" id="mAdhocAmount" class="form-control tabular" step="1" placeholder="0" oninput="recalcModalPreview()" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div>
+          <label class="field-label">日期 (YYYY-MM-DD)</label>
+          <input type="date" id="mDate" class="form-control" onchange="onModalDateChange()" />
+        </div>
+        <div>
+          <label class="field-label">當期總收入 In (HKD)</label>
+          <input type="number" id="mIn" class="form-control tabular" step="1" oninput="recalcModalPreview()" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div>
+          <label class="field-label">HSBC生活費</label>
+          <input type="number" id="mHsbc" class="form-control tabular" step="1" oninput="recalcModalPreview()" />
+        </div>
+        <div>
+          <label class="field-label">8954 貸款供款</label>
+          <input type="number" id="mLoan8954" class="form-control tabular" step="1" oninput="recalcModalPreview()" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div>
+          <label class="field-label">7054 貸款供款</label>
+          <input type="number" id="mLoan7054" class="form-control tabular" step="1" oninput="recalcModalPreview()" />
+        </div>
+        <div>
+          <label class="field-label">供樓</label>
+          <input type="number" id="mLiving" class="form-control tabular" step="1" oninput="recalcModalPreview()" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div>
+          <label class="field-label">媽 家用</label>
+          <input type="number" id="mMum" class="form-control tabular" step="1" oninput="recalcModalPreview()" />
+        </div>
+        <div>
+          <label class="field-label">姨 家用</label>
+          <input type="number" id="mAunt" class="form-control tabular" step="1" oninput="recalcModalPreview()" />
+        </div>
+      </div>
+
+      <div class="form-grid-3">
+        <div>
+          <label class="field-label">稅項 Tax</label>
+          <input type="number" id="mTax" class="form-control tabular" step="1" oninput="recalcModalPreview()" />
+        </div>
+        <div>
+          <label class="field-label">旅遊及保險費用</label>
+          <input type="number" id="mIT" class="form-control tabular" step="1" oninput="recalcModalPreview()" />
+        </div>
+        <div>
+          <label class="field-label">其他特別支出</label>
+          <input type="number" id="mExtra" class="form-control tabular" step="1" oninput="recalcModalPreview()" />
+        </div>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <label class="field-label">備註說明</label>
+        <input type="text" id="mRemark" class="form-control" placeholder="例如：繳稅、雙糧、備註..." />
+      </div>
+
+      <!-- 期末結餘直接修改／實數鎖定區 -->
+      <div style="background:rgba(56, 189, 248, 0.1); border:1px solid rgba(56, 189, 248, 0.35); border-radius:14px; padding:11px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <label class="field-label" id="mEndBalLabel" style="margin:0; color:#bae6fd;">2026年12月 期末實際結餘 (HKD)</label>
+          <span class="badge badge-slate" id="mLockStateBadge">自動推算</span>
+        </div>
+        <input type="number" id="mEndBalance" class="form-control tabular" step="1" oninput="onModalBalanceManualEdit()" />
+        <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-sub); margin-top:6px;">
+          <span id="mFormulaHint">公式推算結餘：HK$0</span>
+          <button type="button" id="mBtnRevertFormula" style="background:none; border:none; color:#38bdf8; font-weight:700; cursor:pointer; padding:0; display:none;" onclick="revertModalToFormula()">
+            恢復自動公式計算
+          </button>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-danger" id="mBtnDelete" style="flex:0.9; display:none;" onclick="deleteCurrentEntry()">刪除</button>
+        <button type="button" class="btn btn-primary" style="flex:2;" onclick="saveModalEntry()">儲存並重算後續結餘</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 確認重置彈窗 ==================== -->
+  <div id="resetModal" class="modal-backdrop" onclick="if(event.target===this) closeResetConfirmModal()">
+    <div class="modal-sheet">
+      <div class="card-title" style="font-size:16px; margin-bottom:8px;">確認重置所有數據？</div>
+      <p style="font-size:13px; color:var(--text-sub); line-height:1.55; margin:0 0 14px;">
+        此操作將會清除所有已鎖定的月份實數、特定期數突發支出、HSBC生活費 Top-up 設定及自訂薪金時段，並還原至原始 Main Table Option 1（2026年12月 至 2032年12月 共 75 期）基準數據。
+      </p>
+      <div class="btn-row">
+        <button type="button" class="btn btn-secondary" onclick="closeResetConfirmModal()">取消</button>
+        <button type="button" class="btn btn-danger" onclick="executeFullReset()">確認全部重置</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const STORAGE_KEY = "fin_tracker_option1_75p_v4";
+      const BASE_SALARY = 36500;
+      const MIN_YEAR = 2027;
+      const MAX_YEAR = 2032;
+
+      // 記憶體安全儲存備援（防止 Safari 無痕模式或 iFrame 環境拋出 SecurityError）
+      const memoryStorageFallback = {};
+      const SafeStorage = {
+        getItem: function (key) {
+          try {
+            return window.localStorage.getItem(key);
+          } catch (e) {
+            return Object.prototype.hasOwnProperty.call(memoryStorageFallback, key) ? memoryStorageFallback[key] : null;
+          }
+        },
+        setItem: function (key, val) {
+          memoryStorageFallback[key] = val;
+          try {
+            window.localStorage.setItem(key, val);
+          } catch (e) {}
+        },
+        removeItem: function (key) {
+          delete memoryStorageFallback[key];
+          try {
+            window.localStorage.removeItem(key);
+          } catch (e) {}
+        }
+      };
+
+      // 原始 Main Table.xlsx（Option 1：2026-12 至 2032-12 共 75 期逐期精準陣列）
+      // 格式：[ym, day, age, in, hsbc, l8954, living, l7054, kit, p, d, mum, aunt, tax, it, remark]
+      const RAW_EXCEL_ROWS = [
+        ["2026-12",7,35,36877,0,0,10000,7054,0,1980,0,15000,0,0,0,"cut boc account"],
+        ["2026-12",17,35,170000,7500,8954,0,0,0,50000,47655,35000,0,0,0,"cut p account, reduce dbs amount to 20k"],
+        ["2027-01",7,36,63500,50980,0,10000,7054,0,0,0,1000,3500,0,0,""],
+        ["2027-01",20,36,162000,7500,8954,20000,0,50000,0,0,0,0,34572,0,"TAX amount"],
+        ["2027-02",7,36,36500,7500,8954,10000,7054,0,0,0,1000,3500,0,0,""],
+        ["2027-03",7,36,36500,7500,8954,10000,7054,0,0,0,1000,3500,0,0,""],
+        ["2027-04",7,36,36500,7500,8954,10000,7054,0,0,0,1000,3500,3832,0,"TAX amount"],
+        ["2027-05",7,36,36500,7500,8954,10000,7054,0,0,0,1000,3500,0,6800,""],
+        ["2027-06",7,36,36500,7500,8954,10000,7054,0,0,0,1000,3500,0,0,""],
+        ["2027-07",7,36,36500,7500,8954,10000,7054,0,0,0,1000,3500,0,0,""],
+        ["2027-08",7,36,36500,7500,8954,10000,7054,0,0,0,1000,3500,0,0,""],
+        ["2027-09",7,36,36500,7500,8954,10000,7054,0,0,0,1000,3500,0,0,""],
+        ["2027-10",7,36,36500,7500,8954,10000,7054,0,0,0,1000,3500,0,6000,""],
+        ["2027-11",7,36,36500,7500,8954,10000,7054,0,0,0,1000,3500,0,0,""],
+        ["2027-12",7,36,36500,7500,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2028-01",7,37,73000,7500,8954,11000,7054,0,0,0,1000,3500,20000,0,"double pay and tax amount"],
+        ["2028-02",7,37,36500,7500,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2028-03",7,37,36500,7500,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2028-04",7,37,36500,7500,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2028-05",7,37,36500,7500,8954,11000,7054,0,0,0,1000,3500,0,6800,""],
+        ["2028-06",7,37,36500,7500,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2028-07",7,37,36500,7500,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2028-08",7,37,36500,7500,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2028-09",7,37,36500,7500,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2028-10",7,37,101500,7500,8954,11000,7054,0,0,0,1000,3500,0,6000,"HSBC top up 48times"],
+        ["2028-11",7,37,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2028-12",7,37,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2029-01",7,38,73000,9212,8954,11000,7054,0,0,0,1000,3500,20000,0,""],
+        ["2029-02",7,38,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2029-03",7,38,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2029-04",7,38,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2029-05",7,38,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,6800,""],
+        ["2029-06",7,38,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2029-07",7,38,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2029-08",7,38,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2029-09",7,38,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2029-10",7,38,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,6000,""],
+        ["2029-11",7,38,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2029-12",7,38,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2030-01",7,39,73000,9212,8954,11000,7054,0,0,0,1000,3500,20000,0,""],
+        ["2030-02",7,39,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2030-03",7,39,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2030-04",7,39,36500,9212,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2030-05",7,39,66500,9212,8954,11000,7054,0,0,0,1000,3500,0,6800,"HSBC top up 24times"],
+        ["2030-06",7,39,36500,10616,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2030-07",7,39,36500,10616,8954,11000,7054,0,0,0,1000,3500,0,0,""],
+        ["2030-08",7,39,36500,10616,8954,11000,7054,0,0,0,1500,3500,0,0,""],
+        ["2030-09",7,39,36500,10616,8954,11000,7018,0,0,0,1500,3500,0,0,""],
+        ["2030-10",7,39,36500,10616,8954,11000,0,0,0,0,1500,3500,0,0,""],
+        ["2030-11",7,39,36500,10616,8954,11000,0,0,0,0,1500,3500,0,6000,""],
+        ["2030-12",7,39,36500,10616,8954,11000,0,0,0,0,1500,3500,0,0,""],
+        ["2031-01",7,40,73000,10616,8954,11000,0,0,0,0,2500,4500,20000,0,""],
+        ["2031-02",7,40,36500,10616,8954,11000,0,0,0,0,2500,4500,0,0,""],
+        ["2031-03",7,40,36500,10616,8954,11000,0,0,0,0,2500,4500,0,0,""],
+        ["2031-04",7,40,36500,10616,8954,11000,0,0,0,0,2500,4500,0,0,""],
+        ["2031-05",7,40,36500,10616,8954,11000,0,0,0,0,2500,4500,0,6800,""],
+        ["2031-06",7,39,36500,10616,8954,11000,0,0,0,0,2500,4500,0,0,""],
+        ["2031-07",7,40,36500,10616,8954,11000,0,0,0,0,2500,4500,0,0,""],
+        ["2031-08",7,40,36500,10616,8954,11000,0,0,0,0,2500,4500,0,0,""],
+        ["2031-09",7,40,36500,10616,8954,11000,0,0,0,0,2500,4500,0,0,""],
+        ["2031-10",7,40,36500,10616,8954,11000,0,0,0,0,2500,4500,0,0,""],
+        ["2031-11",7,40,36500,10616,0,11000,0,0,0,0,2500,4500,0,6000,""],
+        ["2031-12",7,40,36500,10616,0,11000,0,0,0,0,6000,6000,0,0,"諗加大mpf amount"],
+        ["2032-01",7,41,73000,10616,0,11000,0,0,0,0,6000,6000,20000,0,""],
+        ["2032-02",7,41,36500,10616,0,11000,0,0,0,0,6000,6000,0,0,""],
+        ["2032-03",7,41,36500,10616,0,11000,0,0,0,0,6000,6000,0,0,""],
+        ["2032-04",7,41,36500,10616,0,11000,0,0,0,0,6000,6000,0,0,""],
+        ["2032-05",7,41,36500,10616,0,11000,0,0,0,0,6000,6000,0,6800,""],
+        ["2032-06",7,41,36500,9212,0,11000,0,0,0,0,6000,6000,0,0,""],
+        ["2032-07",7,41,36500,9212,0,11000,0,0,0,0,6000,6000,0,0,""],
+        ["2032-08",7,41,36500,9212,0,11000,0,0,0,0,6000,6000,0,0,""],
+        ["2032-09",7,41,36500,9212,0,11000,0,0,0,0,6000,6000,0,0,""],
+        ["2032-10",7,41,36500,9212,0,11000,0,0,0,0,6000,6000,0,6000,""],
+        ["2032-11",7,41,36500,7500,0,11000,0,0,0,0,6000,6000,0,0,""],
+        ["2032-12",7,41,36500,7500,0,11000,0,0,0,0,6000,6000,0,0,""]
+      ];
+
+      function pad2(n) {
+        return n < 10 ? "0" + n : String(n);
+      }
+
+      function formatZhMonth(dateStr) {
+        if (!dateStr || dateStr.length < 7) return dateStr || "";
+        const parts = dateStr.split("-");
+        return parts[0] + "年" + parseInt(parts[1], 10) + "月";
+      }
+
+      function formatFullZhDate(dateStr) {
+        if (!dateStr || dateStr.length < 10) return formatZhMonth(dateStr);
+        const parts = dateStr.split("-");
+        return parts[0] + "年" + parseInt(parts[1], 10) + "月" + parseInt(parts[2], 10) + "日";
+      }
+
+      function formatHKD(num) {
+        const val = Math.round(Number(num) || 0);
+        const sign = val < 0 ? "-" : "";
+        return sign + "HK$" + Math.abs(val).toLocaleString("en-US");
+      }
+
+      // 依 HSBC生活費 Top-up 開關狀態計算某期應有的 Top-up 入帳與月供（同時支持雙開／單開／雙關）
+      function getTopupAdjustedValues(dateStr, rawIn, rawHsbc, useTopup1, useTopup2) {
+        let inVal = rawIn;
+        let hsbcVal = rawHsbc;
+        const ym = dateStr.slice(0, 7);
+
+        // 第 1 次 Top-up：2028-10 入帳 +$65,000，2028-11 至 2032-10 月供 +$1,712
+        if (dateStr === "2028-10-07" && !useTopup1) {
+          inVal -= 65000;
+        }
+        if (ym >= "2028-11" && ym <= "2032-10" && !useTopup1) {
+          hsbcVal -= 1712;
+        }
+
+        // 第 2 次 Top-up：2030-05 入帳 +$30,000，2030-06 至 2032-05 月供 +$1,404
+        if (dateStr === "2030-05-07" && !useTopup2) {
+          inVal -= 30000;
+        }
+        if (ym >= "2030-06" && ym <= "2032-05" && !useTopup2) {
+          hsbcVal -= 1404;
+        }
+
+        return {
+          inVal: Math.max(0, inVal),
+          hsbcVal: Math.max(0, hsbcVal)
+        };
+      }
+
+      function buildBaseEntries(useTopup1, useTopup2) {
+        const t1 = useTopup1 !== undefined ? useTopup1 : true;
+        const t2 = useTopup2 !== undefined ? useTopup2 : true;
+        const list = [];
+        let running = 0;
+
+        for (let i = 0; i < RAW_EXCEL_ROWS.length; i++) {
+          const r = RAW_EXCEL_ROWS[i];
+          const ym = r[0];
+          const day = r[1];
+          const dateStr = ym + "-" + pad2(day);
+          const age = ym.slice(0, 4) === "2031" ? 40 : r[2];
+          const adj = getTopupAdjustedValues(dateStr, r[3], r[4], t1, t2);
+
+          const entry = {
+            id: "base_" + i,
+            date: dateStr,
+            ym: ym,
+            age: age,
+            in: adj.inVal,
+            hsbc: adj.hsbcVal,
+            loan8954: r[5],
+            living: r[6],
+            loan7054: r[7],
+            kit: r[8],
+            p: r[9],
+            d: r[10],
+            mum: r[11],
+            aunt: r[12],
+            tax: r[13],
+            it: r[14],
+            extra: 0,
+            adhocName: "",
+            adhocAmount: 0,
+            remark: r[15] || "",
+            anchored: false,
+            anchorBalance: null,
+            formulaEnd: 0,
+            endBalance: 0
+          };
+
+          const totalOut = entry.hsbc + entry.loan8954 + entry.living + entry.loan7054 +
+            entry.kit + entry.p + entry.d + entry.mum + entry.aunt + entry.tax + entry.it + entry.extra + entry.adhocAmount;
+          running += (entry.in - totalOut);
+          entry.formulaEnd = running;
+          entry.endBalance = running;
+          list.push(entry);
+        }
+        return list;
+      }
+
+      // 應用程式狀態
+      let state = {
+        entries: [],
+        salaryPeriods: [
+          { id: "sp_1", startYm: "2027-02", endYm: "2032-12", salary: 36500 }
+        ],
+        splitThree: false,
+        useTopup1: true,
+        useTopup2: true,
+        warnThreshold: 3000
+      };
+
+      let activeTab = "overview";
+      let activeYearFilter = "ALL";
+      let editingIndex = -1;
+      let isModalNewMode = false;
+      let modalManualBalanceEdited = false;
+
+      function calcEntryOut(e) {
+        return (Number(e.hsbc) || 0) +
+          (Number(e.loan8954) || 0) +
+          (Number(e.living) || 0) +
+          (Number(e.loan7054) || 0) +
+          (Number(e.kit) || 0) +
+          (Number(e.p) || 0) +
+          (Number(e.d) || 0) +
+          (Number(e.mum) || 0) +
+          (Number(e.aunt) || 0) +
+          (Number(e.tax) || 0) +
+          (Number(e.it) || 0) +
+          (Number(e.extra) || 0) +
+          (Number(e.adhocAmount) || 0);
+      }
+
+      // 全流水滾動重算（支援任意期數實數鎖定錨點與突發支出）
+      function recalculateAll(entriesList) {
+        entriesList.sort(function (a, b) {
+          return a.date.localeCompare(b.date);
+        });
+        let running = 0;
+        for (let i = 0; i < entriesList.length; i++) {
+          const e = entriesList[i];
+          const out = calcEntryOut(e);
+          const fEnd = running + (Number(e.in) || 0) - out;
+          e.formulaEnd = fEnd;
+          if (e.anchored && e.anchorBalance !== null && !isNaN(Number(e.anchorBalance))) {
+            e.endBalance = Number(e.anchorBalance);
+          } else {
+            e.endBalance = fEnd;
+          }
+          running = e.endBalance;
+        }
+        return entriesList;
+      }
+
+      function saveState() {
+        try {
+          SafeStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (err) {}
+      }
+
+      function loadState() {
+        const raw = SafeStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.entries) && parsed.entries.length > 0) {
+              state.entries = parsed.entries.map(function (item) {
+                return Object.assign({
+                  adhocName: "",
+                  adhocAmount: 0,
+                  extra: 0,
+                  anchored: false,
+                  anchorBalance: null
+                }, item);
+              });
+              if (Array.isArray(parsed.salaryPeriods) && parsed.salaryPeriods.length > 0) {
+                state.salaryPeriods = parsed.salaryPeriods;
+              }
+              state.splitThree = Boolean(parsed.splitThree);
+              state.useTopup1 = parsed.useTopup1 !== undefined ? Boolean(parsed.useTopup1) : true;
+              state.useTopup2 = parsed.useTopup2 !== undefined ? Boolean(parsed.useTopup2) : true;
+              state.warnThreshold = Number(parsed.warnThreshold) || 3000;
+              recalculateAll(state.entries);
+              return;
+            }
+          } catch (e) {}
+        }
+        state.entries = buildBaseEntries(true, true);
+        recalculateAll(state.entries);
+        saveState();
+      }
+
+      let toastTimer = null;
+      function notifyToast(msg) {
+        const el = document.getElementById("toastBanner");
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.add("show");
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          el.classList.remove("show");
+        }, 2800);
+      }
+
+      // 分頁切換
+      window.switchTab = function (tabName) {
+        activeTab = tabName;
+        const tabs = ["overview", "salary", "ledger", "settings"];
+        for (let i = 0; i < tabs.length; i++) {
+          const t = tabs[i];
+          const panel = document.getElementById("tab-" + t);
+          const navBtn = document.getElementById("nav-" + t);
+          if (panel) panel.classList.toggle("active", t === tabName);
+          if (navBtn) navBtn.classList.toggle("active", t === tabName);
+        }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (tabName === "overview") renderOverview();
+        if (tabName === "salary") renderSalaryTab();
+        if (tabName === "ledger") renderLedgerList();
+        if (tabName === "settings") {
+          const wt = document.getElementById("warnThresholdInput");
+          if (wt) wt.value = state.warnThreshold;
+        }
+      };
+
+      // ==================== HSBC生活費 Top-up 開關 ====================
+      window.onHsbcTopupToggleChange = function () {
+        const t1El = document.getElementById("topup1Toggle");
+        const t2El = document.getElementById("topup2Toggle");
+        const useTopup1 = t1El ? t1El.checked : true;
+        const useTopup2 = t2El ? t2El.checked : true;
+
+        state.useTopup1 = useTopup1;
+        state.useTopup2 = useTopup2;
+
+        // 依新勾選狀態更新 75 期基礎入帳與 HSBC生活費 月供（保留自訂薪金時段加成、突發支出與實數鎖定）
+        const freshBase = buildBaseEntries(useTopup1, useTopup2);
+        const baseMap = {};
+        for (let i = 0; i < freshBase.length; i++) {
+          baseMap[freshBase[i].id] = freshBase[i];
+        }
+
+        const spResult = simulateEntriesWithSalaryPeriods(state.entries, state.salaryPeriods, state.splitThree, useTopup1, useTopup2);
+        state.entries = spResult;
+        recalculateAll(state.entries);
+        saveState();
+        renderOverview();
+
+        const count = (useTopup1 ? 1 : 0) + (useTopup2 ? 1 : 0);
+        notifyToast("✓ 已更新 HSBC生活費 Top-up 設定（已啟用 " + count + " 項），結餘與月供已重算");
+      };
+
+      // ==================== TAB 1: 總覽與實數校準 ====================
+      function populateCalibratorDropdown(keepIndex) {
+        const sel = document.getElementById("calMonthSelect");
+        if (!sel) return;
+        const prevIdx = keepIndex !== undefined ? keepIndex : (sel.selectedIndex >= 0 ? sel.selectedIndex : 0);
+        sel.innerHTML = "";
+        for (let i = 0; i < state.entries.length; i++) {
+          const item = state.entries[i];
+          const opt = document.createElement("option");
+          opt.value = String(i);
+          const lockMark = item.anchored ? " [已實數鎖定]" : "";
+          const adhocMark = (Number(item.adhocAmount) > 0 || item.adhocName) ? " [" + (item.adhocName || "突發") + "]" : "";
+          opt.textContent = formatZhMonth(item.date) + " (" + item.date.slice(8, 10) + "日) — " + item.age + "歲" + lockMark + adhocMark;
+          sel.appendChild(opt);
+        }
+        sel.selectedIndex = Math.min(Math.max(0, prevIdx), state.entries.length - 1);
+        updateCalibratorUI();
+      }
+
+      function populateQuickAdhocDropdown(keepIndex) {
+        const sel = document.getElementById("quickAdhocPeriodSelect");
+        if (!sel) return;
+        const prevIdx = keepIndex !== undefined ? keepIndex : (sel.selectedIndex >= 0 ? sel.selectedIndex : 0);
+        sel.innerHTML = "";
+        for (let i = 0; i < state.entries.length; i++) {
+          const item = state.entries[i];
+          const opt = document.createElement("option");
+          opt.value = String(i);
+          const tag = (Number(item.adhocAmount) > 0 || item.adhocName)
+            ? " ★ " + (item.adhocName || "突發") + " (-$" + (Number(item.adhocAmount) || 0).toLocaleString() + ")"
+            : "";
+          opt.textContent = "第" + (i + 1) + "期 · " + formatZhMonth(item.date) + " (" + item.date + ")" + tag;
+          sel.appendChild(opt);
+        }
+        sel.selectedIndex = Math.min(Math.max(0, prevIdx), state.entries.length - 1);
+      }
+
+      window.onCalMonthChange = function () {
+        updateCalibratorUI();
+      };
+
+      function updateCalibratorUI() {
+        const sel = document.getElementById("calMonthSelect");
+        if (!sel || state.entries.length === 0) return;
+        const idx = parseInt(sel.value, 10) || 0;
+        const item = state.entries[idx];
+        if (!item) return;
+
+        const zhMonth = formatZhMonth(item.date);
+        document.getElementById("calTargetMonthDisplay").textContent = zhMonth + " (" + item.date + ")";
+        document.getElementById("calExpectedLabel").textContent = zhMonth + " 推算結餘";
+        document.getElementById("calActualLabel").textContent = "輸入 " + zhMonth + " 實際結餘";
+
+        const inputEl = document.getElementById("calActualInput");
+        inputEl.placeholder = "輸入 " + zhMonth + " 銀行結餘";
+        inputEl.value = item.anchored && item.anchorBalance !== null ? item.anchorBalance : item.endBalance;
+
+        document.getElementById("calExpectedVal").textContent = formatHKD(item.formulaEnd);
+        document.getElementById("btnLockActual").textContent = "確認鎖定 " + zhMonth + " 實際結餘";
+
+        const badge = document.getElementById("calTargetStatusBadge");
+        const unlockBtn = document.getElementById("btnUnlockCalMonth");
+        if (item.anchored) {
+          badge.textContent = "已實數鎖定";
+          badge.className = "badge badge-emerald";
+          unlockBtn.style.display = "inline-flex";
+        } else {
+          badge.textContent = "系統推算中";
+          badge.className = "badge badge-amber";
+          unlockBtn.style.display = "none";
+        }
+
+        const lockedTotal = state.entries.filter(function (e) { return e.anchored; }).length;
+        document.getElementById("anchorCountBadge").textContent = "已鎖定 " + lockedTotal + " 個月";
+
+        onCalActualInput();
+      }
+
+      window.onCalActualInput = function () {
+        const sel = document.getElementById("calMonthSelect");
+        if (!sel || state.entries.length === 0) return;
+        const idx = parseInt(sel.value, 10) || 0;
+        const item = state.entries[idx];
+        const rawVal = document.getElementById("calActualInput").value;
+        const diffEl = document.getElementById("calDiffVal");
+
+        if (rawVal === "" || isNaN(Number(rawVal))) {
+          diffEl.textContent = "請輸入實際結餘數字";
+          diffEl.className = "tabular text-sub";
+          return;
+        }
+        const diff = Number(rawVal) - item.formulaEnd;
+        if (diff > 0) {
+          diffEl.textContent = "+" + formatHKD(diff) + " (較原推算多)";
+          diffEl.className = "tabular text-emerald";
+        } else if (diff < 0) {
+          diffEl.textContent = formatHKD(diff) + " (較原推算少)";
+          diffEl.className = "tabular text-rose";
+        } else {
+          diffEl.textContent = "HK$0 (與推算一致)";
+          diffEl.className = "tabular text-sky";
+        }
+      };
+
+      window.lockSelectedMonthBalance = function () {
+        const sel = document.getElementById("calMonthSelect");
+        if (!sel) return;
+        const idx = parseInt(sel.value, 10) || 0;
+        const rawVal = document.getElementById("calActualInput").value;
+        if (rawVal === "" || isNaN(Number(rawVal))) {
+          notifyToast("請先輸入有效的實際結餘數字");
+          return;
+        }
+        const item = state.entries[idx];
+        item.anchored = true;
+        item.anchorBalance = Math.round(Number(rawVal));
+        recalculateAll(state.entries);
+        saveState();
+        renderOverview(idx);
+        notifyToast("✓ 已鎖定 " + formatZhMonth(item.date) + " 實際結餘 " + formatHKD(item.anchorBalance));
+      };
+
+      window.unlockSelectedMonthBalance = function () {
+        const sel = document.getElementById("calMonthSelect");
+        if (!sel) return;
+        const idx = parseInt(sel.value, 10) || 0;
+        const item = state.entries[idx];
+        item.anchored = false;
+        item.anchorBalance = null;
+        recalculateAll(state.entries);
+        saveState();
+        renderOverview(idx);
+        notifyToast("已解除 " + formatZhMonth(item.date) + " 實數鎖定，恢復自動推算");
+      };
+
+      window.stepCalMonth = function (step) {
+        const sel = document.getElementById("calMonthSelect");
+        if (!sel) return;
+        const nextIdx = Math.min(Math.max(0, (parseInt(sel.value, 10) || 0) + step), state.entries.length - 1);
+        sel.selectedIndex = nextIdx;
+        updateCalibratorUI();
+      };
+
+      // ==================== 特定期數突發支出管理 ====================
+      window.saveQuickAdhocExpense = function () {
+        const sel = document.getElementById("quickAdhocPeriodSelect");
+        if (!sel) return;
+        const idx = parseInt(sel.value, 10) || 0;
+        const nameVal = (document.getElementById("quickAdhocName").value || "").trim();
+        const amtRaw = document.getElementById("quickAdhocAmount").value;
+        const amtVal = Math.max(0, Math.round(Number(amtRaw) || 0));
+
+        if (!nameVal && amtVal <= 0) {
+          notifyToast("請輸入期數／突發名稱或支出金額");
+          return;
+        }
+
+        const item = state.entries[idx];
+        item.adhocName = nameVal || "突發支出";
+        item.adhocAmount = amtVal;
+        recalculateAll(state.entries);
+        saveState();
+
+        document.getElementById("quickAdhocName").value = "";
+        document.getElementById("quickAdhocAmount").value = "";
+        renderOverview(undefined, idx);
+        notifyToast("✓ 已於 " + formatZhMonth(item.date) + " 設定「" + item.adhocName + "」" + formatHKD(amtVal));
+      };
+
+      window.removeAdhocExpense = function (idx) {
+        const item = state.entries[idx];
+        if (!item) return;
+        const oldName = item.adhocName || "突發支出";
+        item.adhocName = "";
+        item.adhocAmount = 0;
+        recalculateAll(state.entries);
+        saveState();
+        renderOverview();
+        if (activeTab === "ledger") renderLedgerList();
+        notifyToast("已移除 " + formatZhMonth(item.date) + " 的「" + oldName + "」");
+      };
+
+      function renderAdhocSummaryList() {
+        const container = document.getElementById("adhocActiveList");
+        const badge = document.getElementById("adhocCountBadge");
+        if (!container || !badge) return;
+
+        const adhocItems = [];
+        for (let i = 0; i < state.entries.length; i++) {
+          const e = state.entries[i];
+          if ((Number(e.adhocAmount) || 0) > 0 || (e.adhocName && e.adhocName.trim() !== "")) {
+            adhocItems.push({ index: i, entry: e });
+          }
+        }
+
+        badge.textContent = "已設 " + adhocItems.length + " 項";
+        if (adhocItems.length === 0) {
+          container.innerHTML = "";
+          return;
+        }
+
+        container.innerHTML = adhocItems.map(function (obj) {
+          const e = obj.entry;
+          return (
+            '<div class="adhoc-chip">' +
+              '<span style="cursor:pointer;" onclick="openEditEntryModal(' + obj.index + ')">' +
+                formatZhMonth(e.date) + ' · <strong>' + escapeHtml(e.adhocName || "突發") + '</strong> (' + formatHKD(e.adhocAmount) + ')' +
+              '</span>' +
+              '<button type="button" class="adhoc-chip-del" onclick="removeAdhocExpense(' + obj.index + ')" title="移除">×</button>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      function renderOverview(keepCalIdx, keepAdhocIdx) {
+        // 同步 HSBC生活費 Top-up 開關 UI
+        const t1El = document.getElementById("topup1Toggle");
+        const t2El = document.getElementById("topup2Toggle");
+        const topupBadge = document.getElementById("hsbcTopupStatusBadge");
+        if (t1El) t1El.checked = Boolean(state.useTopup1);
+        if (t2El) t2El.checked = Boolean(state.useTopup2);
+        if (topupBadge) {
+          const cnt = (state.useTopup1 ? 1 : 0) + (state.useTopup2 ? 1 : 0);
+          topupBadge.textContent = "已選 " + cnt + " 項";
+          topupBadge.className = cnt > 0 ? "badge badge-emerald" : "badge badge-slate";
+        }
+
+        populateCalibratorDropdown(keepCalIdx);
+        populateQuickAdhocDropdown(keepAdhocIdx);
+        renderAdhocSummaryList();
+
+        const entries = state.entries;
+        const baseList = buildBaseEntries(true, true);
+        const baseEnd2032 = baseList[baseList.length - 1].endBalance;
+        const curEnd2032 = entries[entries.length - 1].endBalance;
+
+        document.getElementById("kpiEnd2032").textContent = formatHKD(curEnd2032);
+        const diff2032 = curEnd2032 - baseEnd2032;
+        const diffEl = document.getElementById("kpiEnd2032Diff");
+        if (diff2032 > 0) {
+          diffEl.textContent = "較原全開基準多 +" + formatHKD(diff2032);
+          diffEl.className = "kpi-note text-emerald";
+        } else if (diff2032 < 0) {
+          diffEl.textContent = "較原全開基準少 " + formatHKD(diff2032);
+          diffEl.className = "kpi-note text-rose";
+        } else {
+          diffEl.textContent = "與原 Option 1 基準一致";
+          diffEl.className = "kpi-note";
+        }
+
+        let minEntry = entries[0];
+        for (let i = 1; i < entries.length; i++) {
+          if (entries[i].endBalance < minEntry.endBalance) {
+            minEntry = entries[i];
+          }
+        }
+        const minEl = document.getElementById("kpiMinBal");
+        minEl.textContent = formatHKD(minEntry.endBalance);
+        minEl.className = "kpi-num tabular " + (minEntry.endBalance < 0 ? "text-rose" : (minEntry.endBalance < state.warnThreshold ? "text-amber" : "text-emerald"));
+        document.getElementById("kpiMinDate").textContent = minEntry.date + " (" + minEntry.age + "歲)";
+
+        const end2031 = entries.find(function (e) { return e.date === "2031-12-07"; }) || entries[entries.length - 13];
+        document.getElementById("kpiEnd2031").textContent = formatHKD(end2031.endBalance);
+
+        const lastEntry = entries[entries.length - 1];
+        const netLast = (Number(lastEntry.in) || 0) - calcEntryOut(lastEntry);
+        document.getElementById("kpiMonthlySave").textContent = (netLast >= 0 ? "+" : "") + formatHKD(netLast);
+
+        // 低水位預警橫幅
+        const alertBox = document.getElementById("lowWaterAlert");
+        const alertText = document.getElementById("lowWaterAlertText");
+        if (minEntry.endBalance < 0) {
+          alertBox.className = "alert-box alert-rose";
+          alertText.innerHTML = "<strong>資金赤字預警：</strong>於 <strong>" + formatFullZhDate(minEntry.date) + "</strong> 結餘將跌至 <strong>" + formatHKD(minEntry.endBalance) + "</strong>，請調整突發支出、啟用 HSBC生活費 Top-up 或微調開支。";
+        } else if (minEntry.endBalance < state.warnThreshold) {
+          alertBox.className = "alert-box alert-amber";
+          alertText.innerHTML = "<strong>低水位提醒：</strong>全期最低現金水位出現於 <strong>" + formatFullZhDate(minEntry.date) + "</strong>，結餘僅剩 <strong>" + formatHKD(minEntry.endBalance) + "</strong>（低於安全線 " + formatHKD(state.warnThreshold) + "）。";
+        } else {
+          alertBox.className = "alert-box";
+          alertBox.style.background = "rgba(16, 185, 129, 0.12)";
+          alertBox.style.border = "1px solid rgba(16, 185, 129, 0.35)";
+          alertBox.style.color = "#a7f3d0";
+          alertText.innerHTML = "<strong>現金流健康：</strong>全期 75 個月最低水位為 <strong>" + formatHKD(minEntry.endBalance) + "</strong>（" + minEntry.date + "），高於設定安全門檻。";
+        }
+
+        // 關鍵里程碑清單
+        const milestones = [
+          {
+            date: "2027-01-20",
+            title: "完成帳戶清數重組及首筆稅項",
+            badgeText: "重組完成",
+            badgeCls: "badge-sky"
+          },
+          {
+            date: "2030-09-07",
+            title: "7054 貸款最後一期供款 ($7,018)",
+            badgeText: "首筆斷供",
+            badgeCls: "badge-emerald"
+          },
+          {
+            date: "2031-10-07",
+            title: "8954 貸款最後一期供款（全期最低水位）",
+            badgeText: "關鍵水位",
+            badgeCls: "badge-amber"
+          },
+          {
+            date: "2031-12-07",
+            title: "媽與姨家用上調至各 $6,000",
+            badgeText: "家用調整",
+            badgeCls: "badge-slate"
+          },
+          {
+            date: "2032-11-07",
+            title: "HSBC生活費 回落至 $7,500（全面轉正）",
+            badgeText: "減供節點",
+            badgeCls: "badge-emerald"
+          },
+          {
+            date: "2032-12-07",
+            title: "2032 年終累計結餘總結",
+            badgeText: "期末結算",
+            badgeCls: "badge-sky"
+          }
+        ];
+
+        const mContainer = document.getElementById("milestoneList");
+        mContainer.innerHTML = milestones.map(function (m) {
+          const found = entries.find(function (e) { return e.date === m.date; });
+          const balVal = found ? formatHKD(found.endBalance) : "-";
+          const yr = m.date.slice(0, 4);
+          return (
+            '<div onclick="jumpToYearLedger(\'' + yr + '\')" style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--border-subtle); cursor:pointer;">' +
+              '<div>' +
+                '<div style="font-size:12px; font-weight:700; color:var(--text-main);">' + m.title + '</div>' +
+                '<div style="font-size:11px; color:var(--text-sub); margin-top:2px;">' + m.date + ' · <span class="badge ' + m.badgeCls + '" style="padding:1px 6px; font-size:10px;">' + m.badgeText + '</span></div>' +
+              '</div>' +
+              '<div class="tabular" style="font-size:14px; font-weight:800; color:#34d399;">' + balVal + '</div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      window.jumpToYearLedger = function (yr) {
+        switchTab("ledger");
+        const chips = document.querySelectorAll("#yearChipRow .chip");
+        let targetBtn = null;
+        for (let i = 0; i < chips.length; i++) {
+          if (chips[i].getAttribute("data-year") === yr) {
+            targetBtn = chips[i];
+            break;
+          }
+        }
+        setYearFilter(yr, targetBtn);
+      };
+
+      // ==================== TAB 2: 薪金時段設定 (Review & 1月雙糧) ====================
+      function getBaseSalaryForYm(ym, periods) {
+        let matched = BASE_SALARY;
+        for (let i = 0; i < periods.length; i++) {
+          const p = periods[i];
+          if (ym >= p.startYm && ym <= p.endYm) {
+            matched = Number(p.salary) || BASE_SALARY;
+          }
+        }
+        return matched;
+      }
+
+      function simulateEntriesWithSalaryPeriods(sourceEntries, periods, splitThree, useTopup1, useTopup2) {
+        const t1 = useTopup1 !== undefined ? useTopup1 : state.useTopup1;
+        const t2 = useTopup2 !== undefined ? useTopup2 : state.useTopup2;
+        const cloned = sourceEntries.map(function (e) {
+          return Object.assign({}, e);
+        });
+
+        const baseRefList = buildBaseEntries(t1, t2);
+        const baseRefMap = {};
+        for (let i = 0; i < baseRefList.length; i++) {
+          baseRefMap[baseRefList[i].id] = baseRefList[i];
+        }
+
+        for (let i = 0; i < cloned.length; i++) {
+          const item = cloned[i];
+          const ref = baseRefMap[item.id];
+          if (!ref) continue;
+
+          // 2026-12 與 2027-01 屬於開局清數期，維持原入帳與原家用
+          if (item.ym <= "2027-01") {
+            item.in = ref.in;
+            item.hsbc = ref.hsbc;
+            item.mum = ref.mum;
+            item.aunt = ref.aunt;
+            continue;
+          }
+
+          const year = parseInt(item.ym.slice(0, 4), 10);
+          const month = parseInt(item.ym.slice(5, 7), 10);
+          const curMonthBaseSal = getBaseSalaryForYm(item.ym, periods);
+
+          // 每年 1 月自動加發上一年 12 月底薪作為雙糧
+          let janBonus = 0;
+          if (month === 1) {
+            const prevDecYm = (year - 1) + "-12";
+            janBonus = getBaseSalaryForYm(prevDecYm, periods);
+          }
+
+          // 保留 HSBC生活費 Top-up 入帳金額（依勾選狀態決定是否包含 $65,000 與 $30,000）
+          let specialTopupIn = 0;
+          if (item.date === "2028-10-07" && t1) specialTopupIn = 65000;
+          if (item.date === "2030-05-07" && t2) specialTopupIn = 30000;
+
+          item.in = curMonthBaseSal + janBonus + specialTopupIn;
+          item.hsbc = ref.hsbc;
+
+          // 加人工就分 3 份：1/3 媽、1/3 姨、1/3 留存帳戶結餘（供樓支出維持不變）
+          const raise = Math.max(0, curMonthBaseSal - BASE_SALARY);
+          if (splitThree && raise > 0) {
+            const oneThird = Math.round(raise / 3);
+            item.mum = ref.mum + oneThird;
+            item.aunt = ref.aunt + oneThird;
+          } else {
+            item.mum = ref.mum;
+            item.aunt = ref.aunt;
+          }
+        }
+
+        return recalculateAll(cloned);
+      }
+
+      function buildYearOptionsHtml(selectedYear) {
+        let html = "";
+        for (let y = MIN_YEAR; y <= MAX_YEAR; y++) {
+          const sel = y === selectedYear ? " selected" : "";
+          html += '<option value="' + y + '"' + sel + '>' + y + '年</option>';
+        }
+        return html;
+      }
+
+      function buildMonthOptionsHtml(selectedMonth) {
+        let html = "";
+        for (let m = 1; m <= 12; m++) {
+          const mm = pad2(m);
+          const sel = mm === selectedMonth ? " selected" : "";
+          html += '<option value="' + mm + '"' + sel + '>' + m + '月</option>';
+        }
+        return html;
+      }
+
+      function renderSalaryTab() {
+        const container = document.getElementById("salaryPeriodsContainer");
+        const countBadge = document.getElementById("salaryPeriodCountBadge");
+        const splitToggle = document.getElementById("splitThreeToggle");
+        if (!container) return;
+
+        splitToggle.checked = state.splitThree;
+        countBadge.textContent = state.salaryPeriods.length + " 個時段";
+
+        container.innerHTML = state.salaryPeriods.map(function (p, idx) {
+          const sParts = (p.startYm || "2027-02").split("-");
+          const eParts = (p.endYm || "2032-12").split("-");
+          const sYear = parseInt(sParts[0], 10) || 2027;
+          const sMonth = sParts[1] || "02";
+          const eYear = parseInt(eParts[0], 10) || 2032;
+          const eMonth = eParts[1] || "12";
+
+          const raise = Math.max(0, (Number(p.salary) || BASE_SALARY) - BASE_SALARY);
+          const third = Math.round(raise / 3);
+
+          return (
+            '<div class="period-card">' +
+              '<div class="period-head">' +
+                '<span class="period-tag">時段 ' + (idx + 1) + ' (' + sYear + '年' + parseInt(sMonth, 10) + '月 至 ' + eYear + '年' + parseInt(eMonth, 10) + '月)</span>' +
+                (state.salaryPeriods.length > 1
+                  ? '<button type="button" class="btn-mini-del" onclick="removeSalaryPeriod(' + idx + ')">刪除時段</button>'
+                  : '<span class="badge badge-slate">基準時段</span>') +
+              '</div>' +
+
+              '<div class="form-grid-2" style="margin-bottom:8px;">' +
+                '<div class="ym-picker-box">' +
+                  '<label class="field-label">開始年月</label>' +
+                  '<div class="ym-select-row">' +
+                    '<select class="ym-select" onchange="updateSalaryPeriodYm(' + idx + ', \'start\', \'year\', this.value)">' + buildYearOptionsHtml(sYear) + '</select>' +
+                    '<select class="ym-select" onchange="updateSalaryPeriodYm(' + idx + ', \'start\', \'month\', this.value)">' + buildMonthOptionsHtml(sMonth) + '</select>' +
+                  '</div>' +
+                '</div>' +
+
+                '<div class="ym-picker-box">' +
+                  '<label class="field-label">結束年月</label>' +
+                  '<div class="ym-select-row">' +
+                    '<select class="ym-select" onchange="updateSalaryPeriodYm(' + idx + ', \'end\', \'year\', this.value)">' + buildYearOptionsHtml(eYear) + '</select>' +
+                    '<select class="ym-select" onchange="updateSalaryPeriodYm(' + idx + ', \'end\', \'month\', this.value)">' + buildMonthOptionsHtml(eMonth) + '</select>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+
+              '<div>' +
+                '<label class="field-label">該時段每月基本底薪 (HKD)</label>' +
+                '<input type="number" class="form-control tabular" step="500" value="' + p.salary + '" oninput="updateSalaryPeriodAmount(' + idx + ', this.value)" />' +
+              '</div>' +
+
+              (raise > 0
+                ? '<div style="font-size:11px; color:#6ee7b7; margin-top:7px;">較基準 $36,500 每月加薪 +' + formatHKD(raise) +
+                  (state.splitThree ? ' → 媽 +' + formatHKD(third) + '｜姨 +' + formatHKD(third) + '｜留存結餘 +' + formatHKD(raise - third * 2) : '（未勾選分 3 份，全數留存結餘）') +
+                  '</div>'
+                : '') +
+            '</div>'
+          );
+        }).join("");
+
+        updateSalaryPreview();
+      }
+
+      window.updateSalaryPeriodYm = function (idx, bound, part, val) {
+        const p = state.salaryPeriods[idx];
+        if (!p) return;
+        const curYm = bound === "start" ? p.startYm : p.endYm;
+        const pieces = curYm.split("-");
+        const newYear = part === "year" ? val : pieces[0];
+        const newMonth = part === "month" ? val : pieces[1];
+        const nextYm = newYear + "-" + newMonth;
+
+        if (bound === "start") {
+          p.startYm = nextYm;
+          if (p.endYm < p.startYm) p.endYm = p.startYm;
+        } else {
+          p.endYm = nextYm;
+          if (p.startYm > p.endYm) p.startYm = p.endYm;
+        }
+        renderSalaryTab();
+      };
+
+      window.updateSalaryPeriodAmount = function (idx, val) {
+        const p = state.salaryPeriods[idx];
+        if (!p) return;
+        p.salary = Math.max(0, Number(val) || 0);
+        updateSalaryPreview();
+      };
+
+      window.onSplitThreeToggleChange = function (checked) {
+        state.splitThree = Boolean(checked);
+        renderSalaryTab();
+      };
+
+      window.addSalaryPeriod = function () {
+        const last = state.salaryPeriods[state.salaryPeriods.length - 1];
+        let nextStart = "2028-04";
+        if (last && last.endYm < "2032-12") {
+          const y = parseInt(last.endYm.slice(0, 4), 10);
+          const m = parseInt(last.endYm.slice(5, 7), 10);
+          if (m === 12) {
+            nextStart = (y + 1) + "-01";
+          } else {
+            nextStart = y + "-" + pad2(m + 1);
+          }
+        }
+        state.salaryPeriods.push({
+          id: "sp_" + Date.now(),
+          startYm: nextStart,
+          endYm: "2032-12",
+          salary: (last ? Number(last.salary) : BASE_SALARY) + 2000
+        });
+        renderSalaryTab();
+      };
+
+      window.removeSalaryPeriod = function (idx) {
+        if (state.salaryPeriods.length <= 1) return;
+        state.salaryPeriods.splice(idx, 1);
+        renderSalaryTab();
+      };
+
+      function updateSalaryPreview() {
+        const sim = simulateEntriesWithSalaryPeriods(state.entries, state.salaryPeriods, state.splitThree, state.useTopup1, state.useTopup2);
+        let minItem = sim[0];
+        for (let i = 1; i < sim.length; i++) {
+          if (sim[i].endBalance < minItem.endBalance) minItem = sim[i];
+        }
+        const end2032 = sim[sim.length - 1].endBalance;
+        const cur2032 = state.entries[state.entries.length - 1].endBalance;
+        const diff = end2032 - cur2032;
+
+        document.getElementById("salPreviewMin").textContent = formatHKD(minItem.endBalance);
+        document.getElementById("salPreviewMinDate").textContent = minItem.date + " (" + minItem.age + "歲)";
+        document.getElementById("salPreview2032").textContent = formatHKD(end2032);
+
+        const diffEl = document.getElementById("salPreviewDiff");
+        if (diff > 0) {
+          diffEl.textContent = "套用後將增加 +" + formatHKD(diff);
+          diffEl.className = "kpi-note text-emerald";
+        } else if (diff < 0) {
+          diffEl.textContent = "套用後將減少 " + formatHKD(diff);
+          diffEl.className = "kpi-note text-rose";
+        } else {
+          diffEl.textContent = "與目前流水線一致";
+          diffEl.className = "kpi-note";
+        }
+
+        // 渲染每年 1 月雙糧明細（2028 至 2032）
+        const bonusList = document.getElementById("janBonusPreviewList");
+        const sampleYears = [2028, 2029, 2030, 2031, 2032];
+        bonusList.innerHTML = sampleYears.map(function (yr) {
+          const prevDecSal = getBaseSalaryForYm((yr - 1) + "-12", state.salaryPeriods);
+          const janSal = getBaseSalaryForYm(yr + "-01", state.salaryPeriods);
+          return (
+            '<div style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border-subtle);">' +
+              '<span><strong>' + yr + '年1月</strong>（1月薪 ' + formatHKD(janSal) + ' + ' + (yr - 1) + '年12月雙糧 ' + formatHKD(prevDecSal) + '）</span>' +
+              '<strong class="tabular text-emerald">' + formatHKD(janSal + prevDecSal) + '</strong>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      window.applySalaryPeriodsToLedger = function () {
+        state.entries = simulateEntriesWithSalaryPeriods(state.entries, state.salaryPeriods, state.splitThree, state.useTopup1, state.useTopup2);
+        saveState();
+        renderSalaryTab();
+        notifyToast("✓ 已將薪金時段與每年 1 月雙糧正式套用至 75 期流水線");
+      };
+
+      // ==================== TAB 3: 75期完整流水明細 ====================
+      window.setYearFilter = function (yr, btnEl) {
+        activeYearFilter = yr;
+        const chips = document.querySelectorAll("#yearChipRow .chip");
+        for (let i = 0; i < chips.length; i++) {
+          chips[i].classList.remove("active");
+        }
+        if (btnEl) btnEl.classList.add("active");
+        renderLedgerList();
+      };
+
+      function renderLedgerList() {
+        const container = document.getElementById("ledgerListContainer");
+        const countInfo = document.getElementById("ledgerCountInfo");
+        if (!container) return;
+
+        const q = (document.getElementById("ledgerSearchInput").value || "").trim().toLowerCase();
+
+        const filtered = state.entries.map(function (item, index) {
+          return { item: item, index: index };
+        }).filter(function (pair) {
+          const item = pair.item;
+          if (activeYearFilter === "LOCKED" && !item.anchored) return false;
+          if (activeYearFilter === "ADHOC" && !((Number(item.adhocAmount) || 0) > 0 || (item.adhocName && item.adhocName.trim() !== ""))) return false;
+          if (activeYearFilter !== "ALL" && activeYearFilter !== "LOCKED" && activeYearFilter !== "ADHOC") {
+            if (!item.date.startsWith(activeYearFilter)) return false;
+          }
+          if (q) {
+            const hitDate = item.date.toLowerCase().indexOf(q) !== -1 || formatZhMonth(item.date).indexOf(q) !== -1;
+            const hitRemark = (item.remark || "").toLowerCase().indexOf(q) !== -1;
+            const hitAdhocName = (item.adhocName || "").toLowerCase().indexOf(q) !== -1;
+            const hitAdhocKeyword = (q === "突發" || q === "突發支出") && ((Number(item.adhocAmount) || 0) > 0 || Boolean(item.adhocName));
+            const hitLocked = (q === "實數鎖定" || q === "鎖定") && item.anchored;
+            const hitHsbc = (q.indexOf("hsbc") !== -1 || q.indexOf("生活費") !== -1) && item.hsbc > 0;
+            const hitMortgage = (q.indexOf("供樓") !== -1 || q === "living") && item.living > 0;
+            const hitMum = (q === "媽" || q === "mum") && item.mum > 0;
+            const hitAunt = (q === "姨" || q === "e") && item.aunt > 0;
+            const hitIT = (q.indexOf("旅遊") !== -1 || q.indexOf("保險") !== -1 || q === "it" || q === "i&t" || q === "i & t") && item.it > 0;
+            if (!hitDate && !hitRemark && !hitAdhocName && !hitAdhocKeyword && !hitLocked && !hitHsbc && !hitMortgage && !hitMum && !hitAunt && !hitIT) return false;
+          }
+          return true;
+        });
+
+        countInfo.textContent = "顯示 " + filtered.length + " 期紀錄（共 " + state.entries.length + " 期）";
+
+        container.innerHTML = filtered.map(function (pair) {
+          const item = pair.item;
+          const idx = pair.index;
+          const totalOut = calcEntryOut(item);
+          const hasAdhoc = (Number(item.adhocAmount) || 0) > 0 || (item.adhocName && item.adhocName.trim() !== "");
+
+          let cls = "ledger-item";
+          if (item.anchored) cls += " is-locked";
+          else if (hasAdhoc) cls += " is-adhoc";
+          else if (item.endBalance < 0) cls += " is-neg";
+          else if (item.endBalance < state.warnThreshold) cls += " is-low";
+
+          const balColor = item.endBalance < 0 ? "text-rose" : (item.endBalance < state.warnThreshold ? "text-amber" : "text-emerald");
+
+          const tags = [];
+          if (hasAdhoc) tags.push("突發:" + (item.adhocName || "未命名") + " $" + (Number(item.adhocAmount) || 0).toLocaleString());
+          if (item.hsbc) tags.push("HSBC生活費 $" + item.hsbc.toLocaleString());
+          if (item.loan8954) tags.push("8954 $" + item.loan8954.toLocaleString());
+          if (item.loan7054) tags.push("7054 $" + item.loan7054.toLocaleString());
+          if (item.living) tags.push("供樓 $" + item.living.toLocaleString());
+          if (item.mum) tags.push("媽 $" + item.mum.toLocaleString());
+          if (item.aunt) tags.push("姨 $" + item.aunt.toLocaleString());
+          if (item.tax) tags.push("稅項 $" + item.tax.toLocaleString());
+          if (item.it) tags.push("旅遊及保險費用 $" + item.it.toLocaleString());
+          if (item.kit) tags.push("Kit $" + item.kit.toLocaleString());
+          if (item.p) tags.push("P $" + item.p.toLocaleString());
+          if (item.d) tags.push("D $" + item.d.toLocaleString());
+          if (item.extra) tags.push("特別支出 $" + item.extra.toLocaleString());
+
+          return (
+            '<div class="' + cls + '" onclick="openEditEntryModal(' + idx + ')">' +
+              '<div class="ledger-top">' +
+                '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">' +
+                  '<span class="ledger-date">' + item.date + '</span>' +
+                  '<span class="badge badge-slate" style="font-size:10px;">第' + (idx + 1) + '期 · ' + item.age + '歲</span>' +
+                  (hasAdhoc ? '<span class="badge badge-amber" style="font-size:10px;">' + escapeHtml(item.adhocName || "突發支出") + '</span>' : '') +
+                  (item.anchored ? '<span class="badge badge-sky" style="font-size:10px;">已實數鎖定</span>' : '') +
+                '</div>' +
+                '<div class="ledger-bal tabular ' + balColor + '">' + formatHKD(item.endBalance) + '</div>' +
+              '</div>' +
+              '<div class="ledger-mid">' +
+                '<span>收入 <strong class="text-emerald tabular">+' + formatHKD(item.in) + '</strong> · 支出 <strong class="text-rose tabular">-' + formatHKD(totalOut) + '</strong></span>' +
+                (item.remark ? '<span style="color:#93c5fd; max-width:44%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(item.remark) + '</span>' : '') +
+              '</div>' +
+              '<div class="ledger-tags">' +
+                tags.map(function (t) {
+                  const isAdhocTag = t.indexOf("突發:") === 0;
+                  return '<span class="mini-tag' + (isAdhocTag ? ' mini-tag-adhoc' : '') + '">' + escapeHtml(t) + '</span>';
+                }).join("") +
+              '</div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      // ==================== 單期編輯 / 新增 / 快速突發彈窗 ====================
+      window.openAdhocQuickModal = function () {
+        const sel = document.getElementById("quickAdhocPeriodSelect");
+        const idx = sel && sel.value !== "" ? (parseInt(sel.value, 10) || 0) : 0;
+        openEditEntryModal(idx, true);
+      };
+
+      window.openEditEntryModal = function (idx, focusAdhoc) {
+        const item = state.entries[idx];
+        if (!item) return;
+        editingIndex = idx;
+        isModalNewMode = false;
+        modalManualBalanceEdited = false;
+
+        const zhMonth = formatZhMonth(item.date);
+        document.getElementById("modalHeaderTitle").textContent = "編輯 " + zhMonth + " (" + item.date + ") 第" + (idx + 1) + "期明細";
+        document.getElementById("mEndBalLabel").textContent = zhMonth + " 期末實際結餘 (HKD)";
+
+        document.getElementById("mAdhocName").value = item.adhocName || "";
+        document.getElementById("mAdhocAmount").value = item.adhocAmount || 0;
+        document.getElementById("mDate").value = item.date;
+        document.getElementById("mIn").value = item.in;
+        document.getElementById("mHsbc").value = item.hsbc;
+        document.getElementById("mLoan8954").value = item.loan8954;
+        document.getElementById("mLoan7054").value = item.loan7054;
+        document.getElementById("mLiving").value = item.living;
+        document.getElementById("mMum").value = item.mum;
+        document.getElementById("mAunt").value = item.aunt;
+        document.getElementById("mTax").value = item.tax;
+        document.getElementById("mIT").value = item.it;
+        document.getElementById("mExtra").value = item.extra || 0;
+        document.getElementById("mRemark").value = item.remark || "";
+
+        document.getElementById("mEndBalance").value = item.anchored && item.anchorBalance !== null ? item.anchorBalance : item.endBalance;
+        document.getElementById("mBtnDelete").style.display = "inline-flex";
+
+        updateModalLockBadge(item.anchored);
+        recalcModalPreview();
+        document.getElementById("entryModal").classList.add("open");
+
+        if (focusAdhoc) {
+          setTimeout(function () {
+            const nameInput = document.getElementById("mAdhocName");
+            if (nameInput) nameInput.focus();
+          }, 120);
+        }
+      };
+
+      window.openAddEntryModal = function () {
+        editingIndex = -1;
+        isModalNewMode = true;
+        modalManualBalanceEdited = false;
+
+        const today = "2027-06-15";
+        const zhMonth = formatZhMonth(today);
+        document.getElementById("modalHeaderTitle").textContent = "新增自訂日期流水紀錄";
+        document.getElementById("mEndBalLabel").textContent = zhMonth + " 期末實際結餘 (HKD)";
+
+        document.getElementById("mAdhocName").value = "";
+        document.getElementById("mAdhocAmount").value = 0;
+        document.getElementById("mDate").value = today;
+        document.getElementById("mIn").value = 0;
+        document.getElementById("mHsbc").value = 0;
+        document.getElementById("mLoan8954").value = 0;
+        document.getElementById("mLoan7054").value = 0;
+        document.getElementById("mLiving").value = 0;
+        document.getElementById("mMum").value = 0;
+        document.getElementById("mAunt").value = 0;
+        document.getElementById("mTax").value = 0;
+        document.getElementById("mIT").value = 0;
+        document.getElementById("mExtra").value = 0;
+        document.getElementById("mRemark").value = "臨時自訂收支";
+
+        document.getElementById("mBtnDelete").style.display = "none";
+        updateModalLockBadge(false);
+        recalcModalPreview();
+        document.getElementById("entryModal").classList.add("open");
+      };
+
+      window.closeEntryModal = function () {
+        document.getElementById("entryModal").classList.remove("open");
+      };
+
+      window.onModalDateChange = function () {
+        const dt = document.getElementById("mDate").value;
+        if (dt) {
+          const zhMonth = formatZhMonth(dt);
+          document.getElementById("mEndBalLabel").textContent = zhMonth + " 期末實際結餘 (HKD)";
+        }
+        recalcModalPreview();
+      };
+
+      function updateModalLockBadge(isLocked) {
+        const badge = document.getElementById("mLockStateBadge");
+        const revBtn = document.getElementById("mBtnRevertFormula");
+        if (isLocked) {
+          badge.textContent = "已實數鎖定";
+          badge.className = "badge badge-sky";
+          revBtn.style.display = "inline";
+        } else {
+          badge.textContent = "自動公式推算";
+          badge.className = "badge badge-slate";
+          revBtn.style.display = "none";
+        }
+      }
+
+      window.onModalBalanceManualEdit = function () {
+        modalManualBalanceEdited = true;
+        updateModalLockBadge(true);
+      };
+
+      window.revertModalToFormula = function () {
+        modalManualBalanceEdited = false;
+        if (!isModalNewMode && editingIndex >= 0) {
+          state.entries[editingIndex].anchored = false;
+          state.entries[editingIndex].anchorBalance = null;
+        }
+        updateModalLockBadge(false);
+        recalcModalPreview(true);
+      };
+
+      window.recalcModalPreview = function (forceSetBalanceInput) {
+        const dt = document.getElementById("mDate").value || "2026-12-07";
+        let prevBal = 0;
+        if (!isModalNewMode && editingIndex > 0) {
+          prevBal = state.entries[editingIndex - 1].endBalance;
+        } else if (isModalNewMode) {
+          for (let i = 0; i < state.entries.length; i++) {
+            if (state.entries[i].date <= dt) prevBal = state.entries[i].endBalance;
+          }
+        }
+
+        const inVal = Number(document.getElementById("mIn").value) || 0;
+        const outVal =
+          (Number(document.getElementById("mHsbc").value) || 0) +
+          (Number(document.getElementById("mLoan8954").value) || 0) +
+          (Number(document.getElementById("mLoan7054").value) || 0) +
+          (Number(document.getElementById("mLiving").value) || 0) +
+          (Number(document.getElementById("mMum").value) || 0) +
+          (Number(document.getElementById("mAunt").value) || 0) +
+          (Number(document.getElementById("mTax").value) || 0) +
+          (Number(document.getElementById("mIT").value) || 0) +
+          (Number(document.getElementById("mExtra").value) || 0) +
+          (Number(document.getElementById("mAdhocAmount").value) || 0);
+
+        const formulaBal = prevBal + inVal - outVal;
+        document.getElementById("mFormulaHint").textContent = "公式推算結餘：" + formatHKD(formulaBal);
+
+        const isAlreadyLocked = !isModalNewMode && editingIndex >= 0 && state.entries[editingIndex].anchored;
+        if (forceSetBalanceInput || (!modalManualBalanceEdited && !isAlreadyLocked)) {
+          document.getElementById("mEndBalance").value = Math.round(formulaBal);
+        }
+      };
+
+      window.saveModalEntry = function () {
+        const dt = document.getElementById("mDate").value;
+        if (!dt) {
+          notifyToast("請輸入有效日期");
+          return;
+        }
+        const yr = parseInt(dt.slice(0, 4), 10) || 2027;
+        const age = 35 + (yr - 2026);
+        const adhocName = (document.getElementById("mAdhocName").value || "").trim();
+        const adhocAmount = Math.max(0, Math.round(Number(document.getElementById("mAdhocAmount").value) || 0));
+
+        const payload = {
+          id: (!isModalNewMode && editingIndex >= 0) ? state.entries[editingIndex].id : ("custom_" + Date.now()),
+          date: dt,
+          ym: dt.slice(0, 7),
+          age: age,
+          in: Number(document.getElementById("mIn").value) || 0,
+          hsbc: Number(document.getElementById("mHsbc").value) || 0,
+          loan8954: Number(document.getElementById("mLoan8954").value) || 0,
+          living: Number(document.getElementById("mLiving").value) || 0,
+          loan7054: Number(document.getElementById("mLoan7054").value) || 0,
+          kit: (!isModalNewMode && editingIndex >= 0) ? (state.entries[editingIndex].kit || 0) : 0,
+          p: (!isModalNewMode && editingIndex >= 0) ? (state.entries[editingIndex].p || 0) : 0,
+          d: (!isModalNewMode && editingIndex >= 0) ? (state.entries[editingIndex].d || 0) : 0,
+          mum: Number(document.getElementById("mMum").value) || 0,
+          aunt: Number(document.getElementById("mAunt").value) || 0,
+          tax: Number(document.getElementById("mTax").value) || 0,
+          it: Number(document.getElementById("mIT").value) || 0,
+          extra: Number(document.getElementById("mExtra").value) || 0,
+          adhocName: adhocName || (adhocAmount > 0 ? "突發支出" : ""),
+          adhocAmount: adhocAmount,
+          remark: document.getElementById("mRemark").value || "",
+          anchored: false,
+          anchorBalance: null,
+          formulaEnd: 0,
+          endBalance: 0
+        };
+
+        const wasLocked = !isModalNewMode && editingIndex >= 0 && state.entries[editingIndex].anchored;
+        if (modalManualBalanceEdited || wasLocked) {
+          payload.anchored = true;
+          payload.anchorBalance = Math.round(Number(document.getElementById("mEndBalance").value) || 0);
+        }
+
+        if (isModalNewMode) {
+          state.entries.push(payload);
+        } else if (editingIndex >= 0) {
+          state.entries[editingIndex] = payload;
+        }
+
+        recalculateAll(state.entries);
+        saveState();
+        closeEntryModal();
+
+        if (activeTab === "overview") renderOverview();
+        if (activeTab === "ledger") renderLedgerList();
+        notifyToast("✓ 已儲存 " + formatZhMonth(dt) + " 紀錄並重算至 2032 年");
+      };
+
+      window.deleteCurrentEntry = function () {
+        if (isModalNewMode || editingIndex < 0) return;
+        const removed = state.entries.splice(editingIndex, 1)[0];
+        recalculateAll(state.entries);
+        saveState();
+        closeEntryModal();
+        if (activeTab === "overview") renderOverview();
+        if (activeTab === "ledger") renderLedgerList();
+        notifyToast("已刪除 " + formatZhMonth(removed.date) + " 紀錄");
+      };
+
+      // ==================== TAB 4: 備份、匯出與重置 ====================
+      window.exportJsonBackup = function () {
+        const jsonStr = JSON.stringify(state, null, 2);
+        triggerDownload(jsonStr, "Financial_Option1_75Periods_Backup.json", "application/json;charset=utf-8;");
+        notifyToast("✓ 已匯出完整 JSON 備份");
+      };
+
+      window.exportCsvReport = function () {
+        const header = "Date,Age,期數突發名稱,突發支出,In,HSBC生活費,8954,供樓,7054,Kit,P,D,媽,姨,稅項,旅遊及保險費用,特別支出,TotalOut,FormulaEnd,ActualEndBalance,IsLocked,Remark\n";
+        const rows = state.entries.map(function (r) {
+          const out = calcEntryOut(r);
+          const safeAdhoc = '"' + (r.adhocName || "").replace(/"/g, '""') + '"';
+          const safeRemark = '"' + (r.remark || "").replace(/"/g, '""') + '"';
+          return [
+            r.date, r.age, safeAdhoc, r.adhocAmount || 0,
+            r.in, r.hsbc, r.loan8954, r.living, r.loan7054,
+            r.kit || 0, r.p || 0, r.d || 0, r.mum, r.aunt, r.tax, r.it, r.extra || 0,
+            out, r.formulaEnd, r.endBalance, r.anchored ? "YES" : "NO", safeRemark
+          ].join(",");
+        }).join("\n");
+        triggerDownload("\uFEFF" + header + rows, "Main_Table_Option1_75Periods.csv", "text/csv;charset=utf-8;");
+        notifyToast("✓ 已匯出 Excel 相容 CSV 報表（含突發名稱、HSBC生活費、供樓、媽、姨、旅遊及保險費用）");
+      };
+
+      function triggerDownload(content, filename, mimeType) {
+        try {
+          const blob = new Blob([content], { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        } catch (err) {
+          notifyToast("瀏覽器限制自動下載，請使用 Safari 開啟");
+        }
+      }
+
+      window.importJsonBackup = function (evt) {
+        const file = evt.target.files && evt.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            if (!parsed || !Array.isArray(parsed.entries) || parsed.entries.length === 0) {
+              throw new Error("Invalid format");
+            }
+            state.entries = parsed.entries.map(function (item) {
+              return Object.assign({
+                adhocName: "",
+                adhocAmount: 0,
+                extra: 0,
+                anchored: false,
+                anchorBalance: null
+              }, item);
+            });
+            if (Array.isArray(parsed.salaryPeriods) && parsed.salaryPeriods.length > 0) {
+              state.salaryPeriods = parsed.salaryPeriods;
+            }
+            state.splitThree = Boolean(parsed.splitThree);
+            state.useTopup1 = parsed.useTopup1 !== undefined ? Boolean(parsed.useTopup1) : true;
+            state.useTopup2 = parsed.useTopup2 !== undefined ? Boolean(parsed.useTopup2) : true;
+            state.warnThreshold = Number(parsed.warnThreshold) || 3000;
+            recalculateAll(state.entries);
+            saveState();
+            switchTab("overview");
+            notifyToast("✓ 已成功從備份檔案還原所有數據");
+          } catch (err) {
+            notifyToast("還原失敗：備份檔案格式不正確");
+          }
+          evt.target.value = "";
+        };
+        reader.readAsText(file);
+      };
+
+      window.updateWarnThreshold = function (val) {
+        state.warnThreshold = Math.max(0, Number(val) || 0);
+        saveState();
+        renderOverview();
+        notifyToast("✓ 已更新安全水位門檻為 " + formatHKD(state.warnThreshold));
+      };
+
+      window.openResetConfirmModal = function () {
+        document.getElementById("resetModal").classList.add("open");
+      };
+
+      window.closeResetConfirmModal = function () {
+        document.getElementById("resetModal").classList.remove("open");
+      };
+
+      window.executeFullReset = function () {
+        SafeStorage.removeItem(STORAGE_KEY);
+        state = {
+          entries: buildBaseEntries(true, true),
+          salaryPeriods: [{ id: "sp_1", startYm: "2027-02", endYm: "2032-12", salary: BASE_SALARY }],
+          splitThree: false,
+          useTopup1: true,
+          useTopup2: true,
+          warnThreshold: 3000
+        };
+        recalculateAll(state.entries);
+        saveState();
+        closeResetConfirmModal();
+        switchTab("overview");
+        notifyToast("✓ 已重置為原始 Option 1 (2026–2032 共 75 期)");
+      };
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      // 初始化啟動
+      function initApp() {
+        loadState();
+        renderOverview();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initApp);
+      } else {
+        initApp();
+      }
+    })();
+  </script>
+</body>
+</html>
